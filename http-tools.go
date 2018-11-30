@@ -3,7 +3,6 @@ package httptool
 import (
 	"bytes"
 	"compress/gzip"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -32,7 +31,6 @@ func CustomHTTPRequest(method string, addr string, data []byte, client *http.Cli
 	}
 	defer resp.Body.Close()
 
-	fmt.Println(resp.Header.Get("Content-Encoding"))
 	if resp.Header.Get("Content-Encoding") == "gzip" {
 		resp.Body, _ = gzip.NewReader(resp.Body)
 	}
