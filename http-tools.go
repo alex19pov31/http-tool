@@ -8,8 +8,25 @@ import (
 	"net/http"
 )
 
+// ResultRequest result http request
+type ResultRequest struct {
+	*http.Response
+	Data  []byte
+	Error error
+}
+
+// ToString resurn body as string data
+func (r *ResultRequest) ToString() string {
+	return string(r.Data)
+}
+
+// IsSuccess check errors in result
+func (r *ResultRequest) IsSuccess() bool {
+	return r.Error == nil
+}
+
 // CustomHTTPRequest Send http request with custom headers
-func CustomHTTPRequest(method string, addr string, data []byte, client *http.Client, updHeader func(req *http.Request) *http.Request) ([]byte, error) {
+func CustomHTTPRequest(method string, addr string, data []byte, client *http.Client, updHeader func(req *http.Request) *http.Request) *ResultRequest {
 	var req *http.Request
 	var err error
 
@@ -21,13 +38,13 @@ func CustomHTTPRequest(method string, addr string, data []byte, client *http.Cli
 	}
 
 	if err != nil {
-		return []byte{}, err
+		return &ResultRequest{Error: err}
 	}
 
 	req = updHeader(req)
 	resp, err := client.Do(req)
 	if err != nil {
-		return []byte{}, err
+		return &ResultRequest{Error: err}
 	}
 	defer resp.Body.Close()
 
@@ -37,16 +54,19 @@ func CustomHTTPRequest(method string, addr string, data []byte, client *http.Cli
 
 	body, _ := ioutil.ReadAll(resp.Body)
 
-	return body, nil
+	return &ResultRequest{
+		Data:     body,
+		Response: resp,
+	}
 }
 
 // GetHTTPRequest send GET http request with custom headers
-func GetHTTPRequest(addr string, client *http.Client, updHeader func(req *http.Request) *http.Request) ([]byte, error) {
+func GetHTTPRequest(addr string, client *http.Client, updHeader func(req *http.Request) *http.Request) *ResultRequest {
 	return CustomHTTPRequest("GET", addr, []byte{}, client, updHeader)
 }
 
 // PostFormHTTPRequest send POST (from) http request with custom headers
-func PostFormHTTPRequest(addr string, data []byte, client *http.Client, updHeader func(req *http.Request) *http.Request) ([]byte, error) {
+func PostFormHTTPRequest(addr string, data []byte, client *http.Client, updHeader func(req *http.Request) *http.Request) *ResultRequest {
 	return CustomHTTPRequest("POST", addr, data, client, func(req *http.Request) *http.Request {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		updHeader(req)
