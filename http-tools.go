@@ -3,6 +3,7 @@ package httptool
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -23,6 +24,11 @@ func (r *ResultRequest) ToString() string {
 // IsSuccess check errors in result
 func (r *ResultRequest) IsSuccess() bool {
 	return r.Error == nil
+}
+
+// JSONUnmarshal convert json data to struct
+func (r *ResultRequest) JSONUnmarshal(v interface{}) error {
+	return json.Unmarshal(r.Data, v)
 }
 
 // CustomHTTPRequest Send http request with custom headers
